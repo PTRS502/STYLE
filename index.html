@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STYLE - Tienda de Ropa</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>STYLE - Tu Tienda de Moda</h1>
+        <nav>
+            <ul>
+                <li><a href="#">Inicio</a></li>
+                <li><a href="#">Catálogo</a></li>
+                <li><a href="#">Carrito</a></li>
+                <li><a href="#">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <section class="banner">
+        <h2>Encuentra tu estilo perfecto</h2>
+    </section>
+
+    <section class="catalogo">
+        <h2>Nuestros Productos</h2>
+        <div class="productos">
+            <div class="producto">
+                <img src="producto1.jpg" alt="Producto 1">
+                <h3>Camisa Casual</h3>
+                <p>$799.00</p>
+                <button onclick="agregarAlCarrito('Camisa Casual', 799.00)">Agregar al Carrito</button>
+            </div>
+            <div class="producto">
+                <img src="producto2.jpg" alt="Producto 2">
+                <h3>Vestido Elegante</h3>
+                <p>$650.00</p>
+                <button onclick="agregarAlCarrito('Vestido Elegante', 650.00)">Agregar al Carrito</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="carrito">
+        <h2>Carrito de Compras</h2>
+        <ul id="lista-carrito"></ul>
+        <p>Total: $<span id="total">0.00</span></p>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 STYLE - Todos los derechos reservados</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
