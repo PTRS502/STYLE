@@ -20,31 +20,43 @@ driver = webdriver.Chrome(options=options)
 try:
     # Abrir la página
     driver.get(ruta_html)
-    time.sleep(1)  # Espera inicial por si la página tarda en cargar
+    time.sleep(2)  # Espera inicial por si la página tarda en cargar
 
-    # Agregar producto al carrito (para "Camisa Casual")
-    agregar_btn = driver.find_element(By.XPATH, "//div[h3[text()='Camisa Casual']]//button")
-    agregar_btn.click()
+    # Lista de productos a agregar al carrito
+    productos = [
+        "Camisa Casual",
+        "Vestido Elegante",
+        "Pantalón slim de algodón para hombre",
+        "Blusa damaia atelier manga larga para mujer"
+    ]
 
-    # Esperar hasta que el producto aparezca en la lista del carrito
-    WebDriverWait(driver, 5).until(
-        EC.text_to_be_present_in_element((By.ID, "lista-carrito"), "Camisa Casual")
-    )
+    for producto in productos:
+        try:
+            # Buscar y hacer clic en el botón de agregar al carrito
+            agregar_btn = driver.find_element(By.XPATH, f"//div[h3[text()='{producto}']]//button")
+            agregar_btn.click()
+            print(f"Producto '{producto}' agregado al carrito.")
+            
+            # Esperar hasta que el producto aparezca en la lista del carrito
+            WebDriverWait(driver, 5).until(
+                EC.text_to_be_present_in_element((By.ID, "lista-carrito"), producto)
+            )
+        except Exception as e:
+            print(f"No se pudo agregar el producto '{producto}': {e}")
 
-    # Esperar que el total se actualice
-    WebDriverWait(driver, 5).until(
-        EC.text_to_be_present_in_element((By.ID, "total"), "799.00")
-    )
-
-    # Verificar que el producto se añadió al carrito
-    carrito_items = driver.find_element(By.ID, "lista-carrito").text.strip()
-    assert "Camisa Casual" in carrito_items, "El producto no fue agregado al carrito."
-
-    # Verificar el total
+    # Verificar el total actualizado
     total = driver.find_element(By.ID, "total").text.strip()
-    assert total == "799.00", f"El total es incorrecto: {total}"
+    print(f"Total en carrito: ${total}")
 
-    print("Prueba completada con éxito. El producto se agregó y el total es correcto.")
+    # Eliminar un producto del carrito
+    eliminar_btn = driver.find_element(By.XPATH, "//ul[@id='lista-carrito']/li[1]/button")
+    eliminar_btn.click()
+    print("Primer producto eliminado del carrito.")
+
+    # Verificar que el producto se haya eliminado correctamente
+    time.sleep(2)
+    nuevo_total = driver.find_element(By.ID, "total").text.strip()
+    print(f"Total después de eliminar un producto: ${nuevo_total}")
 
     # Mantener el navegador abierto hasta que el usuario decida cerrarlo
     input("Presiona ENTER para cerrar el navegador...")

@@ -42,8 +42,19 @@ nav ul li a {
 
 .productos {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.fila {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    flex-wrap: wrap;
 }
 
 .producto {
@@ -52,6 +63,8 @@ nav ul li a {
     border-radius: 10px;
     text-align: center;
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    width: calc(25% - 20px);
+    box-sizing: border-box;
 }
 
 .producto img {
@@ -66,6 +79,7 @@ button {
     padding: 10px;
     border: none;
     cursor: pointer;
+    margin-top: 10px;
 }
 
 footer {
@@ -75,4 +89,17 @@ footer {
     color: white;
     position: relative;
     margin-top: 20px;
+}
+
+/* Responsividad */
+@media screen and (max-width: 1024px) {
+    .producto {
+        width: calc(50% - 20px);
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .producto {
+        width: calc(100% - 20px);
+    }
 }
