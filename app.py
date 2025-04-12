@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
+import bcrypt  # Usamos bcrypt para encriptar la contraseña
 
 app = Flask(__name__)
 CORS(app)  # Habilita CORS en toda la API
@@ -54,6 +55,7 @@ def create_tables():
         ''')
         conn.commit()
 
+# Crear las tablas al inicio
 create_tables()
 
 # Endpoint para obtener productos
@@ -106,6 +108,133 @@ def add_pedido():
         conn.commit()
 
     return jsonify({"message": "Pedido registrado", "pedido_id": pedido_id}), 201
+
+# Endpoint para registrar un usuario (POST)
+@app.route("/usuarios", methods=["POST"])
+def register_usuario():
+    data = request.json
+    nombre = data["nombre"]
+    email = data["email"]
+    password = data["password"]
+
+    # Encriptar la contraseña antes de guardarla en la base de datos
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    with connect_db() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)",
+                           (nombre, email, hashed_password))
+            conn.commit()
+            return jsonify({"message": "Usuario registrado exitosamente"}), 201
+        except sqlite3.IntegrityError:
+            return jsonify({"message": "El correo electrónico ya está registrado"}), 400
+
+# Endpoint para iniciar sesión (POST)
+@app.route("/login", methods=["POST"])
+def login_usuario():
+    data = request.json
+    email = data["email"]
+    password = data["password"]
+
+    with connect_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, password FROM usuarios WHERE email = ?", (email,))
+        user = cursor.fetchone()
+
+        if user:
+            # Verificamos si la contraseña ingresada coincide con la almacenada
+            if bcrypt.checkpw(password.encode('utf-8'), user[2]):
+                return jsonify({"message": "Inicio de sesión exitoso", "user": {"id": user[0], "nombre": user[1]}}), 200
+            else:
+                return jsonify({"message": "Contraseña incorrecta"}), 401
+        else:
+            return jsonify({"message": "Usuario no encontrado"}), 404
+        
+@app.route("/usuarios/<int:id>", methods=["GET"])
+def get_usuario(id):
+    with connect_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, email FROM usuarios WHERE id = ?", (id,))
+        user = cursor.fetchone()
+
+        if user:
+            return jsonify({"id": user[0], "nombre": user[1], "email": user[2]}), 200
+        else:
+            return jsonify({"message": "Usuario no encontrado"}), 404
+
+# Endpoint para ver todos los pedidos
+@app.route("/admin/pedidos", methods=["GET"])
+def obtener_pedidos():
+    with connect_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT p.id, u.nombre, p.total, p.estado, p.fecha
+            FROM pedidos p
+            JOIN usuarios u ON p.usuario_id = u.id
+            ORDER BY p.fecha DESC
+        ''')
+        pedidos = [{
+            "id": row[0],
+            "usuario": row[1],
+            "total": row[2],
+            "estado": row[3],
+            "fecha": row[4]
+        } for row in cursor.fetchall()]
+    return jsonify(pedidos)
+
+
+# Endpoint para ver los detalles de un pedido
+@app.route("/admin/pedidos/<int:id>", methods=["GET"])
+def obtener_detalle_pedido(id):
+    with connect_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT p.nombre, dp.cantidad, dp.subtotal
+            FROM detalle_pedido dp
+            JOIN productos p ON dp.producto_id = p.id
+            WHERE dp.pedido_id = ?
+        ''', (id,))
+        productos = [{
+            "producto": row[0],
+            "cantidad": row[1],
+            "subtotal": row[2]
+        } for row in cursor.fetchall()]
+    return jsonify(productos)
+
+
+# Endpoint para actualizar el estado de un pedido
+@app.route("/admin/pedidos/<int:id>", methods=["PUT"])
+def actualizar_estado_pedido(id):
+    data = request.json
+    nuevo_estado = data.get("estado")
+    
+    with connect_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE pedidos
+            SET estado = ?
+            WHERE id = ?
+        ''', (nuevo_estado, id))
+        conn.commit()
+    
+    return jsonify({"message": "Estado del pedido actualizado"}), 200
+
+
+# Endpoint para eliminar un pedido
+@app.route("/admin/pedidos/<int:id>", methods=["DELETE"])
+def eliminar_pedido(id):
+    with connect_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            DELETE FROM detalle_pedido WHERE pedido_id = ?
+        ''', (id,))
+        cursor.execute('''
+            DELETE FROM pedidos WHERE id = ?
+        ''', (id,))
+        conn.commit()
+
+    return jsonify({"message": "Pedido eliminado"}), 200
 
 # Iniciar Flask
 if __name__ == "__main__":

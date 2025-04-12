@@ -19,6 +19,42 @@
         </nav>
     </header>
     
+    <!-- Sección de Registro de Usuario -->
+    <section id="registroSection">
+        <h2>Registro</h2>
+        <form id="registroForm">
+            <input type="text" id="nombre" placeholder="Nombre completo" required />
+            <input type="email" id="email" placeholder="Correo electrónico" required />
+            <input type="password" id="password" placeholder="Contraseña" required />
+            <!-- Aquí agregamos el botón con el ID 'registroBtn' que Selenium busca -->
+            <button type="submit" id="registroBtn">Registrar</button>
+        </form>
+    </section>
+    
+
+    <!-- Sección de Iniciar sesión -->
+    <section id="loginSection">
+        <h2>Iniciar sesión</h2>
+        <form id="loginForm">
+            <input type="email" id="email" placeholder="Correo electrónico" required />
+            <input type="password" id="password" placeholder="Contraseña" required />
+            <button type="submit">Iniciar sesión</button>
+        </form>
+    </section>
+    
+    <!-- Agregar Producto: Sección para administradores -->
+    <section id="agregarProductoSection">
+        <h2>Agregar Producto</h2>
+        <form id="agregarProductoForm">
+            <input type="text" id="nombre" placeholder="Nombre del producto" required />
+            <input type="number" id="precio" placeholder="Precio" required />
+            <input type="text" id="imagen" placeholder="URL de la imagen" required />
+            <textarea id="descripcion" placeholder="Descripción"></textarea>
+            <input type="number" id="stock" placeholder="Stock" required />
+            <button type="submit">Agregar Producto</button>
+        </form>
+    </section>
+    
     <section class="banner">
         <h2>Encuentra tu estilo perfecto</h2>
     </section>
@@ -95,6 +131,7 @@
         </div>
     </section>
 
+    <!-- Sección del Carrito -->
     <section id="carrito">
         <h2>Carrito de Compras</h2>
         <ul id="lista-carrito"></ul>
@@ -107,6 +144,32 @@
         <p>&copy; 2025 STYLE - Todos los derechos reservados</p>
     </footer>
 
+    <!-- Agregar script de JavaScript -->
     <script src="script.js" defer></script>
+    
+    <script>
+        // Obtener los productos desde el backend de Flask
+        document.addEventListener('DOMContentLoaded', function() {
+            // Realizar solicitud para obtener los productos
+            fetch('http://127.0.0.1:5000/productos')
+                .then(response => response.json())
+                .then(data => {
+                    // Mostrar productos en la página
+                    const productosContainer = document.querySelector('.productos');
+                    data.forEach(producto => {
+                        const productHTML = `
+                            <div class="producto">
+                                <img src="${producto.imagen}" alt="${producto.nombre}">
+                                <h3>${producto.nombre}</h3>
+                                <p>$${producto.precio}</p>
+                                <button onclick="agregarAlCarrito('${producto.nombre}', ${producto.precio})">Agregar al Carrito</button>
+                            </div>
+                        `;
+                        productosContainer.innerHTML += productHTML;
+                    });
+                })
+                .catch(error => console.error('Error al obtener los productos:', error));
+        });
+    </script>
 </body>
 </html>
